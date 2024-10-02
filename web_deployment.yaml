@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-server-deployment
+  labels:
+    app: web-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-server
+  template:
+    metadata:
+      labels:
+        app: web-server
+    spec:
+      initContainers:
+        - name: git-clone
+          image: alpine/git
+          command:
+            [
+              "git",
+              "clone",
+              "https://github.com/FofuxoSibov/sitebike",
+              "/usr/local/apache2/htdocs",
+            ]
+          volumeMounts:
+            - name: web-content
+              mountPath: /usr/local/apache2/htdocs # Mesmo caminho do container principal
+      containers:
+        - name: web-server
+          image: httpd:latest # Imagem do Apache (HTTPD)
+          volumeMounts:
+            - name: web-content
+              mountPath: /usr/local/apache2/htdocs
+          ports:
+            - containerPort: 80 # Porta exposta pelo contêiner
+      volumes:
+        - name: web-content
+          emptyDir: {}
